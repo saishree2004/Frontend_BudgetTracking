@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Budget Tracker</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+<div class="container">
+    <h1>💰 Budget Tracker</h1>
+
+    <!-- Summary -->
+    <div class="summary">
+        <div class="card income">
+            <h3>Income</h3>
+            <p id="incomeAmount">0</p>
+        </div>
+        <div class="card expense">
+            <h3>Expense</h3>
+            <p id="expenseAmount">0</p>
+        </div>
+        <div class="card balance">
+            <h3>Balance</h3>
+            <p id="balanceAmount">0</p>
+        </div>
+    </div>
+
+    <!-- Form -->
+    <div class="form">
+        <input type="text" id="title" placeholder="Transaction title">
+        <input type="number" id="amount" placeholder="Amount">
+        <select id="type">
+            <option value="income">Income</option>
+            <option value="expense">Expense</option>
+        </select>
+        <button onclick="addTransaction()">Add Transaction</button>
+    </div>
+
+      <!-- Table -->
+    <table>
+        <thead>
+            <tr>
+                <th>Title</th>
+                <th>Amount</th>
+                <th>Type</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody id="transactionList"></tbody>
+    </table>
+
+    <!-- Chart -->
+    <div class="chart-container">
+        <canvas id="financeChart"></canvas>
+    </div>
+
+    
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
