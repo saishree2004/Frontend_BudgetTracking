@@ -97,3 +97,5 @@ function clearForm() {
 }
 
 fetch("https://budget-backend.onrender.com/api/transactions")
+
+const API_URL = "https://backend-budgettracking.onrender.com/api/transactions";
