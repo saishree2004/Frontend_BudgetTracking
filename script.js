@@ -2,6 +2,8 @@ let transactions = [];
 let totalIncome = 0;
 let totalExpense = 0;
 
+const API_URL = "https://backend-budgettracking.onrender.com/api/transactions";
+
 // Chart
 const ctx = document.getElementById('financeChart').getContext('2d');
 const financeChart = new Chart(ctx, {
@@ -20,19 +22,33 @@ const financeChart = new Chart(ctx, {
     options: {
         responsive: true,
         maintainAspectRatio: false,
-        plugins: {
-            legend: { display: false }
-        },
-        scales: {
-            y: {
-                beginAtZero: true
-            }
-        }
+        plugins: { legend: { display: false } },
+        scales: { y: { beginAtZero: true } }
     }
 });
 
+// Load transactions from backend on page load
+async function loadTransactions() {
+    try {
+        const res = await fetch(API_URL);
+        transactions = await res.json();
+
+        totalIncome = transactions
+            .filter(t => t.type === 'income')
+            .reduce((sum, t) => sum + t.amount, 0);
+
+        totalExpense = transactions
+            .filter(t => t.type === 'expense')
+            .reduce((sum, t) => sum + t.amount, 0);
+
+        updateUI();
+    } catch (err) {
+        console.error("Failed to load transactions:", err);
+    }
+}
+
 // Add transaction
-function addTransaction() {
+async function addTransaction() {
     const title = document.getElementById('title').value;
     const amount = Number(document.getElementById('amount').value);
     const type = document.getElementById('type').value;
@@ -43,16 +59,43 @@ function addTransaction() {
     }
 
     const transaction = { title, amount, type };
-    transactions.push(transaction);
 
-    if (type === 'income') {
-        totalIncome += amount;
-    } else {
-        totalExpense += amount;
+    try {
+        const res = await fetch(API_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(transaction)
+        });
+
+        const newTransaction = await res.json();
+        transactions.push(newTransaction);
+
+        if (type === 'income') totalIncome += amount;
+        else totalExpense += amount;
+
+        updateUI();
+        clearForm();
+    } catch (err) {
+        console.error("Failed to add transaction:", err);
     }
+}
 
-    updateUI();
-    clearForm();
+// Delete transaction
+async function deleteTransaction(id) {
+    try {
+        await fetch(`${API_URL}/${id}`, { method: 'DELETE' });
+
+        const t = transactions.find(tr => tr._id === id);
+        if (!t) return;
+
+        if (t.type === 'income') totalIncome -= t.amount;
+        else totalExpense -= t.amount;
+
+        transactions = transactions.filter(tr => tr._id !== id);
+        updateUI();
+    } catch (err) {
+        console.error("Failed to delete transaction:", err);
+    }
 }
 
 // Update UI
@@ -64,13 +107,13 @@ function updateUI() {
     const list = document.getElementById('transactionList');
     list.innerHTML = '';
 
-    transactions.forEach((t, index) => {
+    transactions.forEach(t => {
         list.innerHTML += `
             <tr>
                 <td>${t.title}</td>
                 <td>${t.amount}</td>
                 <td>${t.type}</td>
-                <td><button onclick="deleteTransaction(${index})">Delete</button></td>
+                <td><button onclick="deleteTransaction('${t._id}')">Delete</button></td>
             </tr>
         `;
     });
@@ -79,23 +122,11 @@ function updateUI() {
     financeChart.update();
 }
 
-// Delete
-function deleteTransaction(index) {
-    const t = transactions[index];
-
-    if (t.type === 'income') totalIncome -= t.amount;
-    else totalExpense -= t.amount;
-
-    transactions.splice(index, 1);
-    updateUI();
-}
-
 // Clear form
 function clearForm() {
     document.getElementById('title').value = '';
     document.getElementById('amount').value = '';
 }
 
-fetch("https://budget-backend.onrender.com/api/transactions")
-
-const API_URL = "https://backend-budgettracking.onrender.com/api/transactions";
+// Initialize
+loadTransactions();
